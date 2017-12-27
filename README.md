@@ -16,3 +16,4 @@ The library uses ESP8266 Arduino libraries to send emails with smtp servers like
 - Arduino core for ESP8266 WiFi chip: [https://github.com/esp8266/Arduino](https://github.com/esp8266/Arduino)
 
 ## [Usage](id:section-u)
+See example
