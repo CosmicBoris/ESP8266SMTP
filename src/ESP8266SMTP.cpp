@@ -1,4 +1,4 @@
-#include "ESP8266SMTP.h"
+#include <ESP8266SMTP.h>
 #include <base64.h>
 
 ESP8266SMTPHelper::ESP8266SMTPHelper(const char* login, const char* password) :
@@ -97,9 +97,9 @@ String ESP8266SMTPHelper::getLastResponce()
 
 bool ESP8266SMTPHelper::AwaitSMTPResponse(WiFiClientSecure &client, const String &resp, uint16_t timeOut)
 {
-	uint32_t timeStart = millis();
+	uint32_t timeAwait = millis() + timeOut;
 	while(!client.available()) {
-		if(millis() > (timeStart + timeOut)) {
+		if(millis() > timeAwait) {
 			_error = "SMTP Response TIMEOUT!";
 			return false;
 		}
@@ -162,18 +162,24 @@ bool ESP8266SMTPHelper::Send(const String &to, const String &message)
 		_error = "SMTP AUTH error";
 		return false;
 	}
-
-	String tmp = FPSTR(SMTP_FROM);
+	
+	String tmp;
+	tmp.reserve(46); // 14 length of SMTP_FROM + 32 for email, trying to prevent reallocation of string buffer when string changes
+	tmp = FPSTR(SMTP_FROM);
 	tmp.replace("$", _emailAddress);
+
 #if defined(GS_SERIAL_LOG_LEVEL_2)
 	Serial.println(tmp);
 #endif
 	client.println(tmp);
 	AwaitSMTPResponse(client);
-
-	if(to.indexOf(',') == -1) {            // one recepient
+	
+	bool oneRecepient = to.indexOf(',') == -1;
+	
+	if(oneRecepient) {
 		tmp = FPSTR(SMTP_RCPT);
 		tmp.replace("$", to);
+		
 #if defined(GS_SERIAL_LOG_LEVEL_2)
 		Serial.println(tmp);
 #endif
@@ -183,15 +189,17 @@ bool ESP8266SMTPHelper::Send(const String &to, const String &message)
 		char *toCopy = strdup(to.c_str()); // make copy becouse strtok modifyes original string
 		char *sz_r = strtok(toCopy, ",");
 		while(sz_r) {
-			while(*sz_r == ' ')            // skip spaces after comma.
-				++sz_r;
+			while(*sz_r == ' ') ++sz_r;    // skip spaces after comma.
+				
 			tmp = FPSTR(SMTP_RCPT);
 			tmp.replace("$", sz_r);
+			
 #if defined(GS_SERIAL_LOG_LEVEL_2)
 			Serial.println(tmp);
 #endif
 			client.println(tmp);
 			AwaitSMTPResponse(client);
+			
 			sz_r = strtok(NULL, ",");
 		}
 		delete[] toCopy;
@@ -216,7 +224,7 @@ bool ESP8266SMTPHelper::Send(const String &to, const String &message)
 	client.println(tmp);
 
 	tmp = F("To: <$>");
-	if(to.indexOf(',') == -1) {
+	if(oneRecepient) {
 		tmp.replace("$", to);
 #if defined(GS_SERIAL_LOG_LEVEL_2)
 		Serial.println(tmp);
@@ -225,8 +233,8 @@ bool ESP8266SMTPHelper::Send(const String &to, const String &message)
 	} else {
 		char *rec = strtok((char*)to.c_str(), ",");
 		while(rec) {
-			while(*rec == ' ')           // skip spaces after comma.
-				++rec;
+			while(*rec == ' ') ++rec;    // skip spaces after comma.
+				
 			tmp.replace("$", rec);
 #if defined(GS_SERIAL_LOG_LEVEL_2)
 			Serial.println(tmp);
@@ -237,10 +245,8 @@ bool ESP8266SMTPHelper::Send(const String &to, const String &message)
 		}
 	}
 
-	tmp = FPSTR(SMTP_SUB);
-	tmp += _subject;
-
-	client.println(tmp);
+	client.print(FPSTR(SMTP_SUB));
+	client.println(_subject);
 	client.print(FPSTR(HTML_HEAD));
 	client.print(message);
 	client.println(FPSTR(HTML_END));
