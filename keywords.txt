@@ -12,16 +12,16 @@ SMTP	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
-setPort             KEYWORD2
-setServer           KEYWORD2
-Subject             KEYWORD2
-setFrom             KEYWORD2
-setEmail            KEYWORD2
-setPassword         KEYWORD2
-setForGmail         KEYWORD2
-getBase64Email      KEYWORD2
-getBase64Password   KEYWORD2
-getLastResponce     KEYWORD2
-getError            KEYWORD2
-Send                KEYWORD2
-setForGmail 		KEYWORD2
+setPort	KEYWORD2
+setServer	KEYWORD2
+Subject	KEYWORD2
+setFrom	KEYWORD2
+setEmail	KEYWORD2
+setPassword	KEYWORD2
+setForGmail	KEYWORD2
+getBase64Email	KEYWORD2
+getBase64Password	KEYWORD2
+getLastResponce	KEYWORD2
+getError	KEYWORD2
+Send	KEYWORD2
+setForGmail	KEYWORD2
